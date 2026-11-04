@@ -6,7 +6,9 @@ Cần đặt cùng thư mục với Analyze_H264.py, Analyze_H265.py, Analyze_AA
 """
 import os
 import struct
+import sys
 from collections import Counter
+from contextlib import redirect_stdout
 
 from codec.h264 import classify as classify_h264
 from codec.h265 import classify as classify_h265
@@ -18,6 +20,20 @@ H264_CODECS = {"avc1", "avc3"}
 H265_CODECS = {"hvc1", "hev1"}
 AAC_CODECS = {"mp4a"}
 PCM_CODECS = {"sowt", "twos", "lpcm", "ipcm", "in24", "in32", "fl32", "fl64"}
+LOG_FILE = "Log_Analyze.txt"
+
+
+class Tee:
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, s):
+        for x in self.streams:
+            x.write(s)
+
+    def flush(self):
+        for x in self.streams:
+            x.flush()
 
 
 # ---------------------------------------------------------------- parse box
@@ -200,4 +216,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    with open(LOG_FILE, "w", encoding="utf-8") as log, \
+            redirect_stdout(Tee(sys.stdout, log)):
+        main()
